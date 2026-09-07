@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Webex CC Client",
-  "version": "0.1.81",
+  "version": "0.1.82",
   "description": "Injects a Webex Contact Center agent widget (login/logout, call control, click-to-dial) into any CRM web page.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApU1oneg56AXXzo9Y/dXn5KRXmT5BRetyb9l5HU55PKqyc6PPIL9HMTUaIppj85BO8Lc90BULaShGlDTzQGyAUUxJ53fQRMtD+7vgolnrjkX9ooenTb446TKpLOPEh43oUOlOQSIW39l8R/dN/494HQTQVBCjBqxtBgUZuYHEABonauYXxyR9I8pbcRZPE/1k6EZpeKmi/C9KSSZcf+sYvqxgTGZcLF87Rs/W/5oxwHaDouViljNgJv5ChO6ADF79PknDGnTmR36Q4gw2JbhcqZ3Z6kW0/4P64S32rArSPH2odNrb59C3GbXP4+7Id1FxrzeACvOf2C/nMUu+SeThgQIDAQAB",
   "icons": {
