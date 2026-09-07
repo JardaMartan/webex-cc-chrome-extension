@@ -1,0 +1,722 @@
+/*
+ * widget/styles/widget.css — Momentum-token based "pill" design, mirroring the
+ * design system already proven out in the sibling task-management project's
+ * src-report widget (see that repo's memory notes: custom pill components
+ * layered on Momentum tokens, not raw Momentum Button/Select chrome).
+ */
+/* These are only the pre-hydration defaults: WidgetApp overrides all seven as
+   inline custom properties from the resolved colour mode (system / follow the
+   host page / fixed default) — see widget/theme/useWidgetTheme.js. */
+.ccc-root {
+  --panel: #ffffff;
+  --border: #dbe3ec;
+  --text: #0a2236;
+  --text2: #5b6b7b;
+  --accent: #0e7fc1;
+  --bg: #f4f7fa;
+  --active: #cfe0ee;
+  font-family: var(--md-font-family, 'CiscoSansTT', sans-serif);
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483000;
+}
+
+/* Switches native scrollbars/controls inside the panel, which no custom
+   property can reach. */
+.ccc-root[data-dark='true'] {
+  color-scheme: dark;
+}
+
+.ccc-launcher {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(10, 34, 54, 0.25);
+  cursor: grab;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ccc-root--ringing .ccc-launcher {
+  animation: ccc-pulse 1s infinite;
+}
+
+@keyframes ccc-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(14, 127, 193, 0.6); }
+  100% { box-shadow: 0 0 0 14px rgba(14, 127, 193, 0); }
+}
+
+.ccc-panel {
+  width: 260px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(10, 34, 54, 0.18);
+  color: var(--text);
+}
+
+.ccc-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text2);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.ccc-panel__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.ccc-panel__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  color: var(--text2);
+}
+
+.ccc-panel__icon-btn:hover,
+.ccc-panel__icon-btn[aria-pressed='true'] {
+  background: var(--bg);
+  color: var(--accent);
+}
+
+/* Errors surface in the settings screen; this marks the way there. */
+.ccc-panel__icon-btn.has-error {
+  color: #d4371c;
+}
+
+.ccc-root[data-dark='true'] .ccc-panel__icon-btn.has-error {
+  color: #f7644a;
+}
+
+.ccc-settings__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(212, 55, 28, 0.12);
+}
+
+.ccc-settings__error .ccc-settings__hint {
+  flex: 1;
+  color: var(--text);
+}
+
+.ccc-mic-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(199, 79, 14, 0.12);
+  color: var(--text);
+}
+
+.ccc-mic-warning svg {
+  flex: none;
+  color: #c74f0e;
+}
+
+.ccc-mic-warning p {
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+}
+
+.ccc-root[data-dark='true'] .ccc-mic-warning svg {
+  color: #f26b1d;
+}
+
+.ccc-panel__close {
+  border: none;
+  background: none;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text2);
+}
+
+.ccc-settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ccc-settings__title {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ccc-settings__label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text2);
+}
+
+.ccc-settings__hint {
+  font-size: 11px;
+  margin: 0;
+}
+
+.ccc-settings__divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* Badge and spinner are local components (widget/ui/) rather than Momentum's:
+   core ships no compiled badge CSS at all, and the spinner's rules live in a
+   246 KB loader.css. Colours are Momentum tokens. */
+.ccc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.ccc-badge--green { background: #00853c; }
+.ccc-badge--yellow { background: #a85f00; }
+.ccc-badge--orange { background: #c74f0e; }
+.ccc-badge--blue { background: #007aa3; }
+.ccc-badge--red { background: #d4371c; }
+.ccc-badge--gray { background: #707070; }
+
+.ccc-root[data-dark='true'] .ccc-badge--green { background: #00ab50; }
+.ccc-root[data-dark='true'] .ccc-badge--yellow { background: #d97f00; }
+.ccc-root[data-dark='true'] .ccc-badge--orange { background: #f26b1d; }
+.ccc-root[data-dark='true'] .ccc-badge--blue { background: #00a0d1; }
+.ccc-root[data-dark='true'] .ccc-badge--red { background: #f7644a; }
+.ccc-root[data-dark='true'] .ccc-badge--gray { background: #949494; }
+
+.ccc-spinner {
+  display: inline-block;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: ccc-spin 0.7s linear infinite;
+  box-sizing: border-box;
+}
+
+@keyframes ccc-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Segmented pill toggle (same shape as the transfer tabs below). */
+.ccc-seg {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.ccc-seg__btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 13px;
+  padding: 4px 0;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text2);
+  cursor: pointer;
+}
+
+.ccc-seg__btn.is-active {
+  background: var(--panel);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.ccc-settings__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ccc-panel__section {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ccc-panel__section:last-child {
+  border-bottom: none;
+}
+
+.ccc-muted {
+  color: var(--text2);
+  font-size: 12px;
+  margin: 0;
+}
+
+.ccc-connecting {
+  flex-direction: row;
+  align-items: center;
+}
+
+.ccc-input {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 5px 10px;
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--text);
+  height: 28px;
+  box-sizing: border-box;
+}
+
+.ccc-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.ccc-agent-bar__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ccc-agent-bar__availability {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ccc-agent-bar__availability .ss-ctl {
+  flex: 1;
+}
+
+.ccc-agent-bar__name {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.ccc-agent-bar__login {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ccc-incoming__actions,
+.ccc-call-controls__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ccc-incoming__caller,
+.ccc-call-controls__caller {
+  font-weight: 600;
+  font-size: 13px;
+  margin: 0;
+}
+
+.ccc-call-controls__status {
+  margin: 2px 0 0;
+  font-size: 11px;
+}
+
+/* Buttons (widget/ui/Button.jsx). Momentum's own Button pulls its whole
+   package — and moment.js — into this content script, so the widget renders
+   its own, styled with Momentum token colours. */
+.ccc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: filter 0.12s, border-color 0.12s;
+}
+
+.ccc-btn:hover:not(:disabled) { filter: brightness(0.95); }
+.ccc-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ccc-btn:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--active); }
+
+.ccc-btn--circle {
+  padding: 0;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ccc-btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text2);
+}
+
+/* Momentum token colours; white content on a filled surface. */
+.ccc-btn--blue { background: #007aa3; border-color: #007aa3; color: #fff; }
+.ccc-btn--green { background: #00853c; border-color: #00853c; color: #fff; }
+.ccc-btn--red { background: #d4371c; border-color: #d4371c; color: #fff; }
+.ccc-btn--orange { background: #c74f0e; border-color: #c74f0e; color: #fff; }
+.ccc-btn--dark-gray { background: #545454; border-color: #545454; color: #fff; }
+
+/* A destructive action that is not the primary one: red text, no fill. Comes
+   after the colour block so it wins over the filled rule. */
+.ccc-btn--ghost.ccc-btn--red {
+  background: transparent;
+  border-color: transparent;
+  color: #d4371c;
+}
+
+.ccc-root[data-dark='true'] .ccc-btn--ghost.ccc-btn--red {
+  background: transparent;
+  border-color: transparent;
+  color: #f7644a;
+}
+
+/* Scheduled callback list (widget/components/CallbackPanel.jsx) */
+.ccc-callbacks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ccc-callbacks__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.ccc-callbacks__item:hover {
+  background: var(--bg);
+}
+
+.ccc-callbacks__when {
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.ccc-callbacks__who {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ccc-root[data-dark='true'] .ccc-btn--blue { background: #00a0d1; border-color: #00a0d1; }
+.ccc-root[data-dark='true'] .ccc-btn--green { background: #00ab50; border-color: #00ab50; }
+.ccc-root[data-dark='true'] .ccc-btn--red { background: #f7644a; border-color: #f7644a; }
+.ccc-root[data-dark='true'] .ccc-btn--orange { background: #f26b1d; border-color: #f26b1d; }
+.ccc-root[data-dark='true'] .ccc-btn--dark-gray { background: #707070; border-color: #707070; }
+
+/* Inlined Momentum SVG icons (see widget/ui/MomentumIcon.jsx) — the icon font
+   cannot be used inside the shadow root. `currentColor` lets each button's
+   state colour drive the glyph. */
+.ccc-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.ccc-icon svg {
+  display: block;
+  fill: currentColor;
+}
+
+/* Phone-hover popover, injected next to detected phone numbers on the page:
+   a group of up to two actions (dial now / schedule a callback). */
+.ccc-phone-pill {
+  position: absolute;
+  z-index: 2147483000;
+  display: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.ccc-phone-pill--visible {
+  display: flex;
+}
+
+.ccc-phone-pill__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border, #dbe3ec);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(10, 34, 54, 0.2);
+}
+
+.ccc-phone-pill__btn[hidden] {
+  display: none;
+}
+
+.ccc-phone-pill__btn--call {
+  background: #0e7fc1;
+}
+
+.ccc-phone-pill__btn--sent {
+  background: #2e9e5b;
+}
+
+.ccc-phone-pill__btn--callback {
+  background: #c74f0e;
+}
+
+.ccc-pills--disabled .ccc-phone-pill {
+  display: none;
+}
+
+/* Callback calendar (widget/ui/CalendarPicker.jsx), following the Momentum
+   Calendar design on Momentum tokens. */
+.ccc-cal {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  background: var(--panel);
+}
+
+.ccc-cal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.ccc-cal__month {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ccc-cal__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--text2);
+  cursor: pointer;
+}
+
+.ccc-cal__nav:hover:not(:disabled) { background: var(--bg); color: var(--accent); }
+.ccc-cal__nav:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.ccc-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.ccc-cal__weekday {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text2);
+  padding-bottom: 2px;
+}
+
+.ccc-cal__day {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.ccc-cal__day:hover:not(:disabled) { background: var(--active); }
+.ccc-cal__day.is-outside { color: var(--text2); opacity: 0.6; }
+.ccc-cal__day.is-today { box-shadow: inset 0 0 0 1px var(--accent); }
+.ccc-cal__day.is-selected { background: var(--accent); color: #fff; font-weight: 600; }
+/* Past days and anything beyond the API's 31-day window. */
+.ccc-cal__day:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.ccc-timepicker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ccc-timepicker__sep {
+  color: var(--text2);
+  font-weight: 600;
+}
+
+.ccc-callbacks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ccc-callbacks__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.ccc-callbacks__when {
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.ccc-callbacks__who {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ccc-root[data-dark='true'] .ccc-input {
+  background-color: var(--bg);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+
+/* Foldable Call-Associated-Data (CAD/Desktop variables) panel */
+.ccc-cad__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text2);
+  cursor: pointer;
+}
+
+.ccc-cad__chevron {
+  transition: transform 0.15s ease;
+}
+
+.ccc-cad__chevron--collapsed {
+  transform: rotate(-90deg);
+}
+
+.ccc-cad__list {
+  margin: 8px 0 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 10px;
+  row-gap: 4px;
+}
+
+.ccc-cad__list dt {
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.ccc-cad__list dd {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text);
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Transfer panel (Agent/Queue picker), swapped in over Hold/Mute/End */
+.ccc-transfer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ccc-transfer__tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.ccc-transfer__tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 13px;
+  padding: 4px 0;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+}
+
+.ccc-transfer__tab.is-active {
+  background: var(--panel);
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(10, 34, 54, 0.15);
+}
+
+.ccc-transfer__loading {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0;
+}
+
+.ccc-transfer__actions {
+  display: flex;
+  gap: 8px;
+}
+

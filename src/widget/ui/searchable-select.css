@@ -1,0 +1,103 @@
+/* Searchable dropdown — ported from the sibling task-management project's
+   src/ui/searchable-select.css (same Momentum-token pill design), sized down
+   to fit this widget's compact floating panel (28px trigger vs. 32px there). */
+
+.ss-ctl {
+  position: relative;
+  width: 100%;
+  --ss-panel: var(--panel, #ffffff);
+  --ss-border: var(--border, #dbe3ec);
+  --ss-text: var(--text, #0a2236);
+  --ss-text2: var(--text2, #5b6b7b);
+  --ss-accent: var(--accent, #0e7fc1);
+  --ss-bg: var(--bg, #f4f7fa);
+  --ss-active: var(--active, #cfe0ee);
+}
+
+/* Pill trigger */
+.ss-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 28px;
+  box-sizing: border-box;
+  padding: 0 8px 0 12px;
+  border: 1px solid var(--ss-border);
+  border-radius: 14px;
+  background: var(--ss-panel);
+  color: var(--ss-text);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.ss-trigger:hover { border-color: var(--ss-accent); }
+.ss-trigger.is-open { border-color: var(--ss-accent); box-shadow: 0 0 0 3px rgba(14, 127, 193, 0.18); }
+.ss-trigger:disabled { opacity: 0.6; cursor: not-allowed; }
+.ss-trigger:focus-visible { outline: none !important; border-color: var(--ss-accent); box-shadow: 0 0 0 3px rgba(14, 127, 193, 0.18); }
+.ss-trigger__value { flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ss-trigger.is-placeholder .ss-trigger__value { color: var(--ss-text2); }
+.ss-trigger__chevron { display: inline-flex; color: var(--ss-text2); flex-shrink: 0; }
+
+/* Popover — position:fixed with top/left/width set inline from JS (see
+   SearchableSelect.jsx), NOT absolute/relative to .ss-ctl, so it escapes
+   .ccc-panel's overflow-y:auto instead of being clipped/scrolled inside it. */
+.ss-pop {
+  position: fixed;
+  z-index: 2147483001;
+  background: var(--ss-panel);
+  border: 1px solid var(--ss-border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+/* Search field (rounded box) */
+.ss-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  box-sizing: border-box;
+  margin: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--ss-border);
+  border-radius: 13px;
+  background: var(--ss-bg);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.ss-search:focus-within { border-color: var(--ss-accent); box-shadow: 0 0 0 3px rgba(14, 127, 193, 0.15); }
+.ss-search__icon { display: inline-flex; color: var(--ss-text2); flex-shrink: 0; }
+.ss-search__input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ss-text);
+  font-size: 12px;
+  font-family: inherit;
+}
+.ss-search__input::placeholder { color: var(--ss-text2); }
+.ss-search__input:focus, .ss-search__input:focus-visible { outline: none !important; box-shadow: none; }
+
+/* Option list */
+.ss-list { list-style: none; margin: 0; padding: 4px; max-height: 220px; overflow-y: auto; }
+.ss-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--ss-text);
+  cursor: pointer;
+}
+.ss-opt:hover,
+.ss-opt.is-active { background: var(--ss-active); }
+.ss-opt.is-selected { font-weight: 600; }
+.ss-opt__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ss-opt__check { display: inline-flex; color: var(--ss-accent); flex-shrink: 0; }
+.ss-opt--empty { color: var(--ss-text2); cursor: default; justify-content: flex-start; }

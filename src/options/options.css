@@ -1,0 +1,106 @@
+/* Tokens mirror the widget's (src/widget/styles/widget.css) so both surfaces
+   share one palette; values are Momentum tokens (@momentum-ui/tokens). */
+:root {
+  --panel: #ffffff;
+  --border: #dbe3ec;
+  --text: #0a2236;
+  --text2: #5b6b7b;
+  --accent: #0e7fc1;
+  --bg: #f4f7fa;
+  color-scheme: light;
+}
+
+/* Follows the OS/browser preference. `color-scheme` additionally switches the
+   native form controls and scrollbars, which CSS alone cannot restyle. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --panel: #292929;
+    --border: #3b3b3b;
+    --text: #f7f7f7;
+    --text2: #b2b2b2;
+    --accent: #07c1f5;
+    --bg: #1c1c1c;
+    color-scheme: dark;
+  }
+}
+
+body {
+  background: var(--bg);
+}
+
+.ccc-opts {
+  max-width: 640px;
+  margin: 32px auto;
+  padding: 0 16px 48px;
+  color: var(--text);
+}
+
+.ccc-opts h1 {
+  font-size: 20px;
+}
+
+.ccc-opts__card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ccc-opts__card h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text2);
+  margin: 0;
+}
+
+.ccc-opts__card label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.ccc-opts__checkbox {
+  flex-direction: row !important;
+  align-items: center;
+}
+
+.ccc-opts__input {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.ccc-opts__hint {
+  font-size: 12px;
+  color: var(--text2);
+  margin: 0;
+}
+
+.ccc-opts__redirect {
+  display: block;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.ccc-opts__save {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 18px;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+}

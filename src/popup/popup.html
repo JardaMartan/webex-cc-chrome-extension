@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        --panel: #ffffff;
+        --text: #0a2236;
+        --text2: #5b6b7b;
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --panel: #292929;
+          --text: #f7f7f7;
+          --text2: #b2b2b2;
+          color-scheme: dark;
+        }
+      }
+      body {
+        margin: 0;
+        width: 260px;
+        font-family: -apple-system, 'Segoe UI', sans-serif;
+        background: var(--panel);
+        color: var(--text);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>

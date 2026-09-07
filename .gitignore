@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+broker/node_modules/
+extension-private-key.pem
+broker/.env
+/crm-call-companion-*.zip
+/crm-call-companion-*/
+

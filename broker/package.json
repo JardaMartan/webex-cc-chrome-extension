@@ -1,0 +1,13 @@
+{
+  "name": "crm-call-companion-broker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal server-side OAuth token-exchange broker for the CRM Call Companion extension. Holds the Webex integration's client_secret so it never ships inside the browser extension.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
