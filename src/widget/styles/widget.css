@@ -513,12 +513,20 @@
 }
 
 /* Callback calendar (widget/ui/CalendarPicker.jsx), following the Momentum
-   Calendar design on Momentum tokens. */
+   Calendar design on Momentum tokens. Only ever shown inside
+   .ccc-datepicker-pop now (widget/ui/DatePicker.jsx), so its own border
+   doubles as the popover's visual box — no shadow/border on the pop itself. */
+.ccc-datepicker-pop {
+  position: fixed;
+  z-index: 2147483001;
+}
+
 .ccc-cal {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 6px;
   background: var(--panel);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }
 
 .ccc-cal__header {

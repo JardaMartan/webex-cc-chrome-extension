@@ -17,7 +17,7 @@ import {
 import Button from '../ui/Button.jsx';
 import Spinner from '../ui/Spinner.jsx';
 import SearchableSelect from '../ui/SearchableSelect.jsx';
-import CalendarPicker from '../ui/CalendarPicker.jsx';
+import DatePicker from '../ui/DatePicker.jsx';
 import TimePicker from '../ui/TimePicker.jsx';
 
 const WINDOW_OPTIONS = [
@@ -208,7 +208,7 @@ export default function CallbackPanel() {
       />
 
       <label className="ccc-settings__label">Callback date</label>
-      <CalendarPicker value={form.date} onChange={(date) => update({ date })} maxDaysAhead={MAX_DAYS_AHEAD} />
+      <DatePicker value={form.date} onChange={(date) => update({ date })} maxDaysAhead={MAX_DAYS_AHEAD} />
 
       <label className="ccc-settings__label">Start time</label>
       <TimePicker date={form.date} value={form.time} onChange={(time) => update({ time })} />
