@@ -27,12 +27,12 @@ export default function CallControls() {
 
   // This component stays mounted across the whole session (calls come and
   // go, it never unmounts), so without this the previous call's wrap-up pick
-  // would still be selected the next time — letting the agent submit without
-  // ever looking at it. Reset whenever the task identity changes, i.e. a new
-  // call, not just a re-render.
+  // — and mute state — would still apply to the next one. Reset whenever the
+  // task identity changes, i.e. a new call, not just a re-render.
   const taskId = activeTask?.taskId;
   useEffect(() => {
     setWrapupCodeId('');
+    setMuted(false);
   }, [taskId]);
 
   if (!activeTask) return null;
