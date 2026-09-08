@@ -17,6 +17,7 @@ import { AGENT_STATUS } from '../shared/constants.js';
 import { clearCallbackDraft, startCallbackDraft, checkMicrophone, openExtensionOptions } from './store/callSlice.js';
 import { getWidgetUi, setWidgetUi, getSettings, onSettingsChanged } from '../shared/storage.js';
 import useWidgetTheme from './theme/useWidgetTheme.js';
+import useT from './i18n/useT.js';
 
 // How often to re-check mic access while logged in — a revoked OS/browser
 // permission mid-session would otherwise only surface as a silent no-audio
@@ -33,6 +34,7 @@ function clampPosition(pos) {
 }
 
 export default function WidgetApp() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [position, setPosition] = useState(null); // null = default bottom-right corner (CSS-driven)
@@ -205,9 +207,9 @@ export default function WidgetApp() {
             {isSignedIn && !callNeedsAttention && (
               <button
                 className="ccc-panel__icon-btn"
-                aria-label="Scheduled callbacks"
+                aria-label={t('header.scheduledCallbacks')}
                 aria-pressed={!!callbackDraft}
-                title="Scheduled callbacks"
+                title={t('header.scheduledCallbacks')}
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   setShowSettings(false);
@@ -220,9 +222,9 @@ export default function WidgetApp() {
             {isSignedIn && (
               <button
                 className={`ccc-panel__icon-btn${error ? ' has-error' : ''}`}
-                aria-label={error ? 'Settings (an error needs attention)' : 'Settings'}
+                aria-label={error ? t('header.settingsNeedsAttention') : t('header.settings')}
                 aria-pressed={showSettings}
-                title={error ? 'Settings — an error needs attention' : 'Settings'}
+                title={error ? t('header.settingsNeedsAttentionTitle') : t('header.settings')}
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => setShowSettings((v) => !v)}
               >
@@ -231,7 +233,7 @@ export default function WidgetApp() {
             )}
             <button
               className="ccc-panel__close"
-              aria-label="Collapse"
+              aria-label={t('header.collapse')}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => setOpen(false)}
             >
@@ -245,10 +247,10 @@ export default function WidgetApp() {
             <div className="ccc-panel__section ccc-mic-warning">
               <MomentumIcon src={micMutedIcon} size={16} />
               <p className="ccc-muted">
-                {micMessage || 'Microphone access is blocked — calls will have no audio.'}
+                {micMessage || t('mic.blockedDefault')}
               </p>
               <Button size={24} color="orange" onClick={() => dispatch(openExtensionOptions())}>
-                Fix microphone access
+                {t('mic.fixButton')}
               </Button>
             </div>
           )}
@@ -256,7 +258,7 @@ export default function WidgetApp() {
           {agentStatus === AGENT_STATUS.CONNECTING && (
             <div className="ccc-panel__section ccc-connecting">
               <Spinner size={16} />
-              <p className="ccc-muted">Connecting to Webex Contact Center…</p>
+              <p className="ccc-muted">{t('status.connecting')}</p>
             </div>
           )}
           {agentStatus !== AGENT_STATUS.LOGGED_OUT && agentStatus !== AGENT_STATUS.CONNECTING && (
@@ -279,7 +281,7 @@ export default function WidgetApp() {
       {!expanded && (
         <button
           className="ccc-launcher"
-          aria-label="Open Webex CC Client"
+          aria-label={t('header.openWidget')}
           onPointerDown={startDrag}
           onPointerMove={onDragMove}
           onPointerUp={(e) => {

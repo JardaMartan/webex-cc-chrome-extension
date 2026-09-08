@@ -5,11 +5,13 @@ import { useDispatch } from 'react-redux';
 import { taskAction, fetchTransferAgents, fetchTransferQueues } from '../store/callSlice.js';
 import { TASK_ACTION, TRANSFER_DESTINATION_TYPE } from '../../shared/constants.js';
 import SearchableSelect from '../ui/SearchableSelect.jsx';
+import useT from '../i18n/useT.js';
 
 // Blind transfer (task.transfer — no talk-first consult step), matching the
 // ask: "transfer to an available agent or to a queue", same as WxCC Desktop's
 // simple transfer. Replaces the Hold/Mute/End row in CallControls.jsx while open.
 export default function TransferPanel({ taskId, onClose }) {
+  const t = useT();
   const dispatch = useDispatch();
   const [destinationType, setDestinationType] = useState(TRANSFER_DESTINATION_TYPE.AGENT);
   const [to, setTo] = useState('');
@@ -47,14 +49,14 @@ export default function TransferPanel({ taskId, onClose }) {
           className={`ccc-transfer__tab${isAgent ? ' is-active' : ''}`}
           onClick={() => setDestinationType(TRANSFER_DESTINATION_TYPE.AGENT)}
         >
-          Agent
+          {t('transfer.agentTab')}
         </button>
         <button
           type="button"
           className={`ccc-transfer__tab${!isAgent ? ' is-active' : ''}`}
           onClick={() => setDestinationType(TRANSFER_DESTINATION_TYPE.QUEUE)}
         >
-          Queue
+          {t('transfer.queueTab')}
         </button>
       </div>
       {loading ? (
@@ -66,17 +68,17 @@ export default function TransferPanel({ taskId, onClose }) {
           value={to}
           onChange={(id) => setTo(id || '')}
           options={options}
-          placeholder={isAgent ? 'Select agent…' : 'Select queue…'}
-          ariaLabel="Transfer destination"
-          emptyText={isAgent ? 'No available agents' : 'No queues found'}
+          placeholder={isAgent ? t('transfer.selectAgent') : t('common.selectQueue')}
+          ariaLabel={t('transfer.destinationLabel')}
+          emptyText={isAgent ? t('transfer.noAgents') : t('transfer.noQueues')}
         />
       )}
       <div className="ccc-transfer__actions">
         <Button color="blue" size={28} disabled={!to} onClick={transfer}>
-          Transfer
+          {t('transfer.transferButton')}
         </Button>
         <Button size={28} ghost onClick={onClose}>
-          Cancel
+          {t('common.cancel')}
         </Button>
       </div>
     </div>

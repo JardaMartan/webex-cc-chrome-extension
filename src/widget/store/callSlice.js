@@ -43,6 +43,11 @@ const initialState = {
   // Last-applied snapshot sequence number from webexSdkClient (see its
   // `_seq`) — null until the first hydrate, so that one is never rejected.
   _seq: null,
+  // Resolved UI locale (see shared/i18n/resolveLocale.js) — set once at mount
+  // and on settings changes (widget/index.js), read by every component via
+  // useT(). Lives in Redux (not React context) so the plain-DOM phone-popover
+  // scanner can translate its own injected buttons too.
+  locale: 'en',
 };
 
 const callSlice = createSlice({
@@ -87,6 +92,9 @@ const callSlice = createSlice({
       state.micGranted = !!action.payload.granted;
       state.micMessage = action.payload.message || null;
     },
+    setLocale(state, action) {
+      state.locale = action.payload;
+    },
   },
 });
 
@@ -98,6 +106,7 @@ export const {
   startCallbackDraft,
   clearCallbackDraft,
   setMicStatus,
+  setLocale,
 } = callSlice.actions;
 export default callSlice.reducer;
 

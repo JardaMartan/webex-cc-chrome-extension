@@ -11,8 +11,10 @@ import { AGENT_STATUS, TASK_ACTION } from '../../shared/constants.js';
 import SearchableSelect from '../ui/SearchableSelect.jsx';
 import MomentumIcon from '../ui/MomentumIcon.jsx';
 import TransferPanel from './TransferPanel.jsx';
+import useT from '../i18n/useT.js';
 
 export default function CallControls() {
+  const t = useT();
   const dispatch = useDispatch();
   const { agentStatus, activeTask, wrapupCodes, held, recordingPaused, consultState, conferenceActive } = useSelector(
     (s) => s.call
@@ -37,13 +39,15 @@ export default function CallControls() {
   if (isRinging) {
     return (
       <div className="ccc-panel__section ccc-incoming">
-        <p className="ccc-incoming__caller">Incoming call{activeTask.ani ? ` from ${activeTask.ani}` : ''}</p>
+        <p className="ccc-incoming__caller">
+          {activeTask.ani ? t('callControls.incomingCallFrom', { ani: activeTask.ani }) : t('callControls.incomingCall')}
+        </p>
         <div className="ccc-incoming__actions">
           <Button color="green" size={28} onClick={() => dispatch(taskAction(taskId, TASK_ACTION.ACCEPT))}>
-            Answer
+            {t('callControls.answer')}
           </Button>
           <Button color="red" size={28} ghost onClick={() => dispatch(taskAction(taskId, TASK_ACTION.DECLINE))}>
-            Decline
+            {t('callControls.decline')}
           </Button>
         </div>
       </div>
@@ -55,7 +59,7 @@ export default function CallControls() {
     const hasCodes = (wrapupCodes || []).length > 0;
     return (
       <div className="ccc-panel__section ccc-wrapup">
-        <p className="ccc-muted">Call ended — wrap-up required.</p>
+        <p className="ccc-muted">{t('callControls.wrapUpRequired')}</p>
         {hasCodes ? (
           <SearchableSelect
             value={wrapupCodeId}
@@ -64,16 +68,13 @@ export default function CallControls() {
               .slice()
               .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
               .map((c) => ({ id: c.id, name: c.name }))}
-            placeholder="Select wrap-up reason…"
-            ariaLabel="Wrap-up reason"
+            placeholder={t('callControls.selectWrapUpReason')}
+            ariaLabel={t('callControls.wrapUpReasonLabel')}
           />
         ) : (
           // Without a code the API cannot be called at all, so say so rather
           // than leaving a disabled button the agent cannot get past.
-          <p className="ccc-muted ccc-call-controls__status">
-            No wrap-up codes are configured for this agent profile — the call must be wrapped up
-            from Webex CC Desktop.
-          </p>
+          <p className="ccc-muted ccc-call-controls__status">{t('callControls.noWrapUpCodes')}</p>
         )}
         <Button
           color="blue"
@@ -83,7 +84,7 @@ export default function CallControls() {
             dispatch(taskAction(taskId, TASK_ACTION.WRAPUP, { auxCodeId: wrapupCodeId, wrapUpReason: selected?.name }))
           }
         >
-          Submit wrap-up
+          {t('callControls.submitWrapUp')}
         </Button>
       </div>
     );
@@ -91,17 +92,17 @@ export default function CallControls() {
 
   return (
     <div className="ccc-panel__section ccc-call-controls">
-      <p className="ccc-call-controls__caller">{activeTask.ani || 'Active call'}</p>
+      <p className="ccc-call-controls__caller">{activeTask.ani || t('callControls.activeCallFallback')}</p>
       {/* Hold is deliberately absent — the Hold button's own colour already
           shows it, and an extra line here grows the panel mid-call. */}
       {(recordingPaused || consultState || conferenceActive) && (
         <p className="ccc-muted ccc-call-controls__status">
           {[
-            consultState === 'offered' && 'Consult requested by another agent',
-            consultState === 'requested' && 'Consult ringing',
-            consultState === 'consulting' && 'Consulting',
-            conferenceActive && 'In conference',
-            recordingPaused && 'Recording paused',
+            consultState === 'offered' && t('callControls.consultOffered'),
+            consultState === 'requested' && t('callControls.consultRequested'),
+            consultState === 'consulting' && t('callControls.consulting'),
+            conferenceActive && t('callControls.inConference'),
+            recordingPaused && t('callControls.recordingPaused'),
           ]
             .filter(Boolean)
             .join(' · ')}
@@ -115,9 +116,9 @@ export default function CallControls() {
             circle
             size={28}
             color={held ? 'orange' : 'dark-gray'}
-            ariaLabel={held ? 'Resume call' : 'Hold call'}
+            ariaLabel={held ? t('callControls.resumeCallAria') : t('callControls.holdCallAria')}
             ariaPressed={held}
-            title={held ? 'Resume' : 'Hold'}
+            title={held ? t('callControls.resumeTitle') : t('callControls.holdTitle')}
             onClick={() => dispatch(taskAction(taskId, held ? TASK_ACTION.RESUME : TASK_ACTION.HOLD))}
           >
             <MomentumIcon src={holdIcon} />
@@ -126,9 +127,9 @@ export default function CallControls() {
             circle
             size={28}
             color={muted ? 'red' : 'green'}
-            ariaLabel={muted ? 'Unmute microphone' : 'Mute microphone'}
+            ariaLabel={muted ? t('callControls.unmuteAria') : t('callControls.muteAria')}
             ariaPressed={muted}
-            title={muted ? 'Unmute' : 'Mute'}
+            title={muted ? t('callControls.unmuteTitle') : t('callControls.muteTitle')}
             onClick={() => {
               dispatch(taskAction(taskId, muted ? TASK_ACTION.UNMUTE : TASK_ACTION.MUTE));
               setMuted(!muted);
@@ -140,8 +141,8 @@ export default function CallControls() {
             circle
             size={28}
             color="blue"
-            ariaLabel="Transfer call"
-            title="Transfer"
+            ariaLabel={t('callControls.transferAria')}
+            title={t('callControls.transferTitle')}
             onClick={() => setShowTransfer(true)}
           >
             <MomentumIcon src={transferIcon} />
@@ -150,8 +151,8 @@ export default function CallControls() {
             circle
             size={28}
             color="red"
-            ariaLabel="End call"
-            title="End call"
+            ariaLabel={t('callControls.endCallAria')}
+            title={t('callControls.endCallAria')}
             onClick={() => dispatch(taskAction(taskId, TASK_ACTION.END))}
           >
             <MomentumIcon src={endCallIcon} />

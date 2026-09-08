@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import calendarIcon from '@momentum-ui/icons/svg/calendar-empty_16.svg';
 import MomentumIcon from './MomentumIcon.jsx';
 import CalendarPicker from './CalendarPicker.jsx';
+import useT from '../i18n/useT.js';
 
 /*
  * widget/ui/DatePicker.jsx — single-line date field with a calendar icon
@@ -11,18 +13,19 @@ import CalendarPicker from './CalendarPicker.jsx';
  * form (~200px tall) even when the agent wasn't actively picking a date;
  * this collapses it to a single 28px row, only opening on demand.
  */
-export default function DatePicker({ value, onChange, maxDaysAhead, now, ariaLabel = 'Callback date' }) {
+export default function DatePicker({ value, onChange, maxDaysAhead, now, ariaLabel }) {
+  const t = useT();
+  const locale = useSelector((s) => s.call.locale);
   const [open, setOpen] = useState(false);
   const [popStyle, setPopStyle] = useState(null);
   const rootRef = useRef(null);
   const triggerRef = useRef(null);
 
-  const locale = typeof navigator !== 'undefined' ? navigator.language : 'en';
   const displayText = value
     ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(
         new Date(`${value}T00:00`)
       )
-    : 'Select date…';
+    : t('common.selectDate');
 
   useEffect(() => {
     if (!open) return undefined;

@@ -12,10 +12,12 @@ import widgetCss from './styles/widget.css';
 import searchableSelectCss from './ui/searchable-select.css';
 import { injectCss } from '../shared/injectCss.js';
 import { createStore } from './store/store.js';
-import { initWidget, hydrate, setError } from './store/callSlice.js';
+import { initWidget, hydrate, setError, setLocale } from './store/callSlice.js';
 import { onEvent, sendCommand } from '../shared/messaging.js';
 import { EVT, REG, SOURCE } from '../shared/constants.js';
-import { getSettings } from '../shared/storage.js';
+import { getSettings, onSettingsChanged } from '../shared/storage.js';
+import { resolveLocale } from '../shared/i18n/resolveLocale.js';
+import { SUPPORTED_LOCALES } from '../shared/i18n/locales.js';
 import WidgetApp from './WidgetApp.jsx';
 import { startPhonePopoverScanner } from './phone/phonePopover.js';
 
@@ -55,7 +57,17 @@ async function mount() {
     sendCommand(SOURCE.WIDGET, REG.WIDGET_CLOSED).catch(() => {});
   });
 
+  // Resolved once at mount and re-resolved on every settings change (e.g. the
+  // agent picks a language in the widget's own Settings panel) — stored in
+  // Redux, not React context, so the plain-DOM phone-popover scanner below
+  // can translate its own injected "Call"/"Schedule callback" buttons too.
+  const applyLocale = (settings) => {
+    store.dispatch(setLocale(resolveLocale(settings?.language, navigator.language, SUPPORTED_LOCALES)));
+  };
   const settings = await getSettings();
+  applyLocale(settings);
+  onSettingsChanged(applyLocale);
+
   if (settings.phoneDetectionEnabled) {
     startPhonePopoverScanner(store, pillContainer);
   }

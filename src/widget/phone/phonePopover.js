@@ -25,6 +25,7 @@ import { extractPhoneNumbers } from '../../shared/phoneMatcher.js';
 import { toInlineSvg } from '../ui/momentumSvg.js';
 import { outdial, startCallbackDraft } from '../store/callSlice.js';
 import { canPlaceCall, canScheduleCallback } from '../store/selectors.js';
+import { t } from '../../shared/i18n/translate.js';
 
 const scannedHosts = new WeakSet();
 // Pills already injected, so a state change can re-skin them in place.
@@ -52,8 +53,9 @@ function makeCallPill(store, phoneValue) {
   group.className = 'ccc-phone-pill';
 
   const callBtn = makeButton('ccc-phone-pill__btn--call', CALL_SVG);
-  callBtn.title = `Call ${phoneValue}`;
-  callBtn.setAttribute('aria-label', `Call ${phoneValue}`);
+  const locale = store.getState().call.locale;
+  callBtn.title = t(locale, 'phone.callAria', { number: phoneValue });
+  callBtn.setAttribute('aria-label', t(locale, 'phone.callAria', { number: phoneValue }));
   callBtn.addEventListener('click', (ev) => {
     ev.preventDefault();
     ev.stopPropagation();
@@ -63,8 +65,8 @@ function makeCallPill(store, phoneValue) {
   });
 
   const callbackBtn = makeButton('ccc-phone-pill__btn--callback', CALLBACK_SVG);
-  callbackBtn.title = `Schedule a callback to ${phoneValue}`;
-  callbackBtn.setAttribute('aria-label', `Schedule a callback to ${phoneValue}`);
+  callbackBtn.title = t(locale, 'phone.scheduleCallbackAria', { number: phoneValue });
+  callbackBtn.setAttribute('aria-label', t(locale, 'phone.scheduleCallbackAria', { number: phoneValue }));
   callbackBtn.addEventListener('click', (ev) => {
     ev.preventDefault();
     ev.stopPropagation();

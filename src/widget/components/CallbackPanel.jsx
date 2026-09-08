@@ -19,14 +19,7 @@ import Spinner from '../ui/Spinner.jsx';
 import SearchableSelect from '../ui/SearchableSelect.jsx';
 import DatePicker from '../ui/DatePicker.jsx';
 import TimePicker from '../ui/TimePicker.jsx';
-
-const WINDOW_OPTIONS = [
-  { id: '30', name: '30 minutes' },
-  { id: '60', name: '1 hour' },
-  { id: '120', name: '2 hours' },
-  { id: '240', name: '4 hours' },
-  { id: '480', name: '8 hours' },
-];
+import useT from '../i18n/useT.js';
 
 const ASSIGN_TO_QUEUE = 'queue';
 const ASSIGN_TO_ME = 'agent';
@@ -45,6 +38,14 @@ function assignmentOf(callback, myAgentId) {
 }
 
 export default function CallbackPanel() {
+  const t = useT();
+  const WINDOW_OPTIONS = [
+    { id: '30', name: t('callback.window30') },
+    { id: '60', name: t('callback.window1h') },
+    { id: '120', name: t('callback.window2h') },
+    { id: '240', name: t('callback.window4h') },
+    { id: '480', name: t('callback.window8h') },
+  ];
   const dispatch = useDispatch();
   const { callbackDraft, activeTask, agent } = useSelector((s) => s.call);
   const myAgentId = agent?.agentId;
@@ -174,32 +175,32 @@ export default function CallbackPanel() {
   return (
     <div className="ccc-panel__section ccc-settings">
       <div className="ccc-settings__row">
-        <span className="ccc-settings__title">{existing ? 'Re-schedule callback' : 'Schedule callback'}</span>
+        <span className="ccc-settings__title">{existing ? t('callback.rescheduleTitle') : t('callback.scheduleTitle')}</span>
         <Button size={28} ghost onClick={() => dispatch(clearCallbackDraft())}>
-          Back
+          {t('common.back')}
         </Button>
       </div>
 
-      <label className="ccc-settings__label">Callback number</label>
+      <label className="ccc-settings__label">{t('callback.numberLabel')}</label>
       <input
         className="ccc-input"
         value={form.callbackNumber}
         onChange={(e) => update({ callbackNumber: e.target.value })}
         onBlur={(e) => checkExisting(e.target.value)}
       />
-      {checking && <p className="ccc-muted ccc-settings__hint">Checking for an existing callback…</p>}
+      {checking && <p className="ccc-muted ccc-settings__hint">{t('callback.checkingExisting')}</p>}
       {existing && (
         <div className="ccc-settings__row">
           <p className="ccc-muted ccc-settings__hint">
-            Already scheduled for {formatWhen(existing)} — saving will move it.
+            {t('callback.alreadyScheduled', { when: formatWhen(existing) })}
           </p>
           <Button size={28} ghost color="red" disabled={busy} onClick={() => remove(existing.id)}>
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       )}
 
-      <label className="ccc-settings__label">Customer name</label>
+      <label className="ccc-settings__label">{t('callback.customerNameLabel')}</label>
       <input
         className="ccc-input"
         value={form.customerName}
@@ -207,29 +208,34 @@ export default function CallbackPanel() {
         onChange={(e) => update({ customerName: e.target.value })}
       />
 
-      <label className="ccc-settings__label">Callback date</label>
-      <DatePicker value={form.date} onChange={(date) => update({ date })} maxDaysAhead={MAX_DAYS_AHEAD} />
+      <label className="ccc-settings__label">{t('callback.dateLabel')}</label>
+      <DatePicker
+        value={form.date}
+        onChange={(date) => update({ date })}
+        maxDaysAhead={MAX_DAYS_AHEAD}
+        ariaLabel={t('callback.dateLabel')}
+      />
 
-      <label className="ccc-settings__label">Start time</label>
+      <label className="ccc-settings__label">{t('callback.startTimeLabel')}</label>
       <TimePicker date={form.date} value={form.time} onChange={(time) => update({ time })} />
 
-      <label className="ccc-settings__label">Callback window</label>
+      <label className="ccc-settings__label">{t('callback.windowLabel')}</label>
       <SearchableSelect
         value={form.windowMinutes}
         onChange={(id) => update({ windowMinutes: id || '30' })}
         options={WINDOW_OPTIONS}
-        ariaLabel="Callback window"
+        ariaLabel={t('callback.windowLabel')}
       />
 
-      <label className="ccc-settings__label">Handled by</label>
-      <div className="ccc-seg" role="group" aria-label="Callback assignment">
+      <label className="ccc-settings__label">{t('callback.handledByLabel')}</label>
+      <div className="ccc-seg" role="group" aria-label={t('callback.assignmentGroupLabel')}>
         <button
           type="button"
           className={`ccc-seg__btn${form.assignTo === ASSIGN_TO_QUEUE ? ' is-active' : ''}`}
           aria-pressed={form.assignTo === ASSIGN_TO_QUEUE}
           onClick={() => update({ assignTo: ASSIGN_TO_QUEUE })}
         >
-          Queue
+          {t('common.queue')}
         </button>
         <button
           type="button"
@@ -237,35 +243,33 @@ export default function CallbackPanel() {
           aria-pressed={form.assignTo === ASSIGN_TO_ME}
           onClick={() => update({ assignTo: ASSIGN_TO_ME })}
         >
-          Me
+          {t('callback.meOption')}
         </button>
       </div>
       {form.assignTo === ASSIGN_TO_OTHER && (
-        <p className="ccc-muted ccc-settings__hint">
-          Currently assigned to another agent — it stays with them unless you pick Queue or Me.
-        </p>
+        <p className="ccc-muted ccc-settings__hint">{t('callback.assignedToOther')}</p>
       )}
 
       {form.assignTo === ASSIGN_TO_QUEUE ? (
         <>
-          <label className="ccc-settings__label">Queue</label>
+          <label className="ccc-settings__label">{t('common.queue')}</label>
           <SearchableSelect
             value={form.queueId}
             onChange={(id) => update({ queueId: id || '' })}
             options={queues}
-            placeholder="Select queue…"
-            ariaLabel="Queue"
+            placeholder={t('common.selectQueue')}
+            ariaLabel={t('common.queue')}
           />
         </>
       ) : (
         // The API demands a queue regardless, so the fallback is named rather
         // than sent invisibly.
         <p className="ccc-muted ccc-settings__hint">
-          Routes through {queueName || 'the first available queue'} if the callback cannot be taken personally.
+          {t('callback.routesThrough', { queue: queueName || t('callback.firstAvailableQueue') })}
         </p>
       )}
 
-      <label className="ccc-settings__label">Reason (optional)</label>
+      <label className="ccc-settings__label">{t('callback.reasonLabel')}</label>
       <input
         className="ccc-input"
         value={form.callbackReason}
@@ -273,30 +277,43 @@ export default function CallbackPanel() {
       />
 
       <Button color="blue" size={28} disabled={busy} onClick={submit}>
-        {status === 'saving' ? <Spinner size={14} /> : existing ? 'Re-schedule callback' : 'Schedule callback'}
+        {status === 'saving' ? <Spinner size={14} /> : existing ? t('callback.rescheduleTitle') : t('callback.scheduleTitle')}
       </Button>
-      {status === 'saved' && <p className="ccc-muted ccc-settings__hint">✓ Callback saved.</p>}
-      {status === 'deleted' && <p className="ccc-muted ccc-settings__hint">✓ Callback deleted.</p>}
+      {status === 'saved' && <p className="ccc-muted ccc-settings__hint">{t('callback.saved')}</p>}
+      {status === 'deleted' && <p className="ccc-muted ccc-settings__hint">{t('callback.deleted')}</p>}
       {status?.startsWith('error:') && <p className="ccc-muted ccc-settings__hint">✗ {status.slice(6)}</p>}
 
       <div className="ccc-settings__divider" />
 
       {/* The list API needs an assignee or a number to filter on, so this can
           only show what is assigned to this agent. */}
-      <label className="ccc-settings__label">Callbacks assigned to you</label>
+      <label className="ccc-settings__label">{t('callback.assignedToYouLabel')}</label>
       {scheduled === null && <Spinner size={14} />}
-      {scheduled?.length === 0 && <p className="ccc-muted ccc-settings__hint">None scheduled.</p>}
+      {scheduled?.length === 0 && <p className="ccc-muted ccc-settings__hint">{t('callback.noneScheduled')}</p>}
       {scheduled?.length > 0 && (
         <ul className="ccc-callbacks">
           {scheduled.map((cb) => (
             <li key={cb.id} className="ccc-callbacks__item">
               <span className="ccc-callbacks__when">{formatWhen(cb)}</span>
               <span className="ccc-callbacks__who">{cb.customerName || cb.callbackNumber}</span>
-              <Button size={24} ghost disabled={busy} ariaLabel={`Edit callback for ${cb.customerName || cb.callbackNumber}`} onClick={() => loadExisting(cb)}>
-                Edit
+              <Button
+                size={24}
+                ghost
+                disabled={busy}
+                ariaLabel={t('callback.editAria', { who: cb.customerName || cb.callbackNumber })}
+                onClick={() => loadExisting(cb)}
+              >
+                {t('common.edit')}
               </Button>
-              <Button size={24} ghost color="red" disabled={busy} ariaLabel={`Delete callback for ${cb.customerName || cb.callbackNumber}`} onClick={() => remove(cb.id)}>
-                Delete
+              <Button
+                size={24}
+                ghost
+                color="red"
+                disabled={busy}
+                ariaLabel={t('callback.deleteAria', { who: cb.customerName || cb.callbackNumber })}
+                onClick={() => remove(cb.id)}
+              >
+                {t('common.delete')}
               </Button>
             </li>
           ))}

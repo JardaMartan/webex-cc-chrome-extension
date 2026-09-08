@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import SearchableSelect from './SearchableSelect.jsx';
 import { timeOptions } from '../callback/timeOptions.js';
+import useT from '../i18n/useT.js';
 
 /*
  * widget/ui/TimePicker.jsx — hour/minute selector for the callback form.
@@ -18,6 +19,7 @@ import { timeOptions } from '../callback/timeOptions.js';
  * be picked at all on the earliest selectable day.
  */
 export default function TimePicker({ date, value, onChange, now = new Date() }) {
+  const t = useT();
   const { hours, minutesFor } = useMemo(() => timeOptions(date, now), [date, now]);
   const [hour, setHour] = useState(() => (value ? value.split(':')[0] : ''));
   const [minute, setMinute] = useState(() => (value ? value.split(':')[1] : ''));
@@ -54,16 +56,16 @@ export default function TimePicker({ date, value, onChange, now = new Date() }) 
         value={hour}
         onChange={(h) => apply(h || '', h && minutesFor(h).includes(minute) ? minute : '')}
         options={hours.map((h) => ({ id: h, name: h }))}
-        placeholder="HH"
-        ariaLabel="Hour"
+        placeholder={t('time.hourPlaceholder')}
+        ariaLabel={t('time.hourLabel')}
       />
       <span className="ccc-timepicker__sep">:</span>
       <SearchableSelect
         value={minute}
         onChange={(m) => apply(hour, m || '')}
         options={minutesFor(hour || hours[0]).map((m) => ({ id: m, name: m }))}
-        placeholder="MM"
-        ariaLabel="Minute"
+        placeholder={t('time.minutePlaceholder')}
+        ariaLabel={t('time.minuteLabel')}
         disabled={!hour}
       />
     </div>

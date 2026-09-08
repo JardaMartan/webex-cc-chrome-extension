@@ -131,4 +131,7 @@ export const DEFAULT_SETTINGS = {
   speakerDeviceId: '',
   // One of COLOR_MODE — how the widget derives its colour palette.
   colorMode: 'system',
+  // 'auto' (follow the resolved page/browser language) or a supported
+  // locale code from shared/i18n/locales.js.
+  language: 'auto',
 };

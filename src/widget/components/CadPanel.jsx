@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { getWidgetUi, setWidgetUi } from '../../shared/storage.js';
+import useT from '../i18n/useT.js';
 
 // Call-Associated-Data / Desktop flow variables (see serializeTask() in
 // sdk/webexSdkClient.js) — foldable, remembering the last fold state across
 // calls/reloads the same way the widget's dragged position is remembered.
 export default function CadPanel() {
+  const t = useT();
   const activeTask = useSelector((s) => s.call.activeTask);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -25,7 +27,7 @@ export default function CadPanel() {
   return (
     <div className="ccc-panel__section ccc-cad">
       <button className="ccc-cad__toggle" onClick={toggle} aria-expanded={!collapsed}>
-        <span>Call details</span>
+        <span>{t('cad.title')}</span>
         <span className={`ccc-cad__chevron${collapsed ? ' ccc-cad__chevron--collapsed' : ''}`}>▾</span>
       </button>
       {!collapsed && (

@@ -12,8 +12,7 @@ import { AGENT_STATUS } from '../../shared/constants.js';
 import SearchableSelect from '../ui/SearchableSelect.jsx';
 import StatusBadge from '../ui/StatusBadge.jsx';
 import Spinner from '../ui/Spinner.jsx';
-
-const AVAILABLE_OPTION = { id: 'available', name: 'Available' };
+import useT from '../i18n/useT.js';
 
 function sortedByName(list) {
   return (list || []).slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -26,27 +25,29 @@ function sortedByName(list) {
  * distinguishable by colour alone (which also keeps it usable for colour-blind
  * agents and at a glance from across a desk).
  */
-function describeStatus({ agentStatus, subStatus, activeTask, idleCodeName }) {
+function describeStatus(t, { agentStatus, subStatus, activeTask, idleCodeName }) {
   if (agentStatus === AGENT_STATUS.WRAP_UP) {
-    return { label: 'Wrap-up', color: 'orange', icon: wrapUpIcon };
+    return { label: t('status.wrapUp'), color: 'orange', icon: wrapUpIcon };
   }
   if (agentStatus === AGENT_STATUS.ON_CALL) {
-    return { label: 'On call', color: 'red', icon: engagedIcon };
+    return { label: t('status.onCall'), color: 'red', icon: engagedIcon };
   }
   // A task exists but the call has not been answered yet.
   if (activeTask) {
-    return { label: 'Reserved', color: 'blue', icon: reservedIcon };
+    return { label: t('status.reserved'), color: 'blue', icon: reservedIcon };
   }
   if (agentStatus === AGENT_STATUS.REGISTERED) {
-    return { label: 'No station', color: 'gray', icon: noStationIcon };
+    return { label: t('status.noStation'), color: 'gray', icon: noStationIcon };
   }
   if (subStatus === 'Idle') {
-    return { label: idleCodeName || 'Not ready', color: 'yellow', icon: idleIcon };
+    return { label: idleCodeName || t('status.notReady'), color: 'yellow', icon: idleIcon };
   }
-  return { label: 'Available', color: 'green', icon: readyIcon };
+  return { label: t('status.available'), color: 'green', icon: readyIcon };
 }
 
 export default function AgentBar() {
+  const t = useT();
+  const AVAILABLE_OPTION = { id: 'available', name: t('status.available') };
   const dispatch = useDispatch();
   const { agentStatus, agent, teams, loginVoiceOptions, idleCodes, subStatus, auxCodeId, activeTask, loading } =
     useSelector((s) => s.call);
@@ -61,12 +62,12 @@ export default function AgentBar() {
   const needsDialNumber = useMemo(() => loginOption === 'AGENT_DN' || loginOption === 'EXTENSION', [loginOption]);
 
   const currentIdleCodeName = (idleCodes || []).find((c) => c.id === auxCodeId)?.name;
-  const status = describeStatus({ agentStatus, subStatus, activeTask, idleCodeName: currentIdleCodeName });
+  const status = describeStatus(t, { agentStatus, subStatus, activeTask, idleCodeName: currentIdleCodeName });
 
   return (
     <div className="ccc-panel__section ccc-agent-bar">
       <div className="ccc-agent-bar__row">
-        <span className="ccc-agent-bar__name">{agent?.name || agent?.agentName || 'Agent'}</span>
+        <span className="ccc-agent-bar__name">{agent?.name || agent?.agentName || t('agentBar.agentFallback')}</span>
         <StatusBadge color={status.color} icon={status.icon}>
           {status.label}
         </StatusBadge>
@@ -78,7 +79,7 @@ export default function AgentBar() {
             value={pendingAux}
             onChange={(id) => setPendingAux(id || 'available')}
             options={[AVAILABLE_OPTION, ...sortedByName(idleCodes)]}
-            ariaLabel="Availability"
+            ariaLabel={t('agentBar.availabilityLabel')}
           />
           <Button
             size={28}
@@ -91,7 +92,7 @@ export default function AgentBar() {
               )
             }
           >
-            Set
+            {t('agentBar.setButton')}
           </Button>
         </div>
       )}
@@ -105,10 +106,10 @@ export default function AgentBar() {
             value={teamId}
             onChange={(id) => setTeamId(id || '')}
             options={sortedByName(
-              (teams || []).map((t) => ({ id: t.teamId ?? t.id, name: t.teamName ?? t.name ?? t.teamId ?? t.id }))
+              (teams || []).map((t2) => ({ id: t2.teamId ?? t2.id, name: t2.teamName ?? t2.name ?? t2.teamId ?? t2.id }))
             )}
-            placeholder="Select team…"
-            ariaLabel="Team"
+            placeholder={t('common.selectTeam')}
+            ariaLabel={t('common.team')}
           />
           <SearchableSelect
             value={loginOption}
@@ -117,13 +118,13 @@ export default function AgentBar() {
               .slice()
               .sort((a, b) => a.localeCompare(b))
               .map((opt) => ({ id: opt, name: opt }))}
-            placeholder="Select voice option…"
-            ariaLabel="Voice option"
+            placeholder={t('agentBar.selectVoiceOption')}
+            ariaLabel={t('agentBar.voiceOptionLabel')}
           />
           {needsDialNumber && (
             <input
               className="ccc-input"
-              placeholder="Dial-in number"
+              placeholder={t('agentBar.dialInNumber')}
               value={dialNumber}
               onChange={(e) => setDialNumber(e.target.value)}
             />
@@ -134,7 +135,7 @@ export default function AgentBar() {
             disabled={loading || !teamId || !loginOption}
             onClick={() => dispatch(stationLogin({ teamId, loginOption, dialNumber }))}
           >
-            {loading ? <Spinner size={14} /> : 'Station login'}
+            {loading ? <Spinner size={14} /> : t('agentBar.stationLogin')}
           </Button>
         </div>
       )}

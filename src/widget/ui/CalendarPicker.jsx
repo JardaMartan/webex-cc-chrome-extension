@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 import chevronLeft from '@momentum-ui/icons/svg/arrow-left_16.svg';
 import chevronRight from '@momentum-ui/icons/svg/arrow-right_16.svg';
 import MomentumIcon from './MomentumIcon.jsx';
 import { monthMatrix, addMonths, isSameDay, isSelectableDay, toDateValue } from '../callback/calendarGrid.js';
+import useT from '../i18n/useT.js';
 
 /*
  * widget/ui/CalendarPicker.jsx — month calendar following the Momentum
@@ -16,6 +18,8 @@ import { monthMatrix, addMonths, isSameDay, isSelectableDay, toDateValue } from 
  * custom elements globally, which is risky inside an arbitrary CRM page.
  */
 export default function CalendarPicker({ value, onChange, maxDaysAhead = 31, now = new Date() }) {
+  const t = useT();
+  const locale = useSelector((s) => s.call.locale);
   const selected = value ? new Date(`${value}T00:00`) : null;
   const [visibleMonth, setVisibleMonth] = useState(() => new Date((selected || now).getFullYear(), (selected || now).getMonth(), 1));
 
@@ -24,7 +28,6 @@ export default function CalendarPicker({ value, onChange, maxDaysAhead = 31, now
     [visibleMonth]
   );
 
-  const locale = typeof navigator !== 'undefined' ? navigator.language : 'en';
   const monthLabel = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(visibleMonth);
   const weekdayNames = useMemo(() => {
     const fmt = new Intl.DateTimeFormat(locale, { weekday: 'short' });
@@ -42,7 +45,7 @@ export default function CalendarPicker({ value, onChange, maxDaysAhead = 31, now
         <button
           type="button"
           className="ccc-cal__nav"
-          aria-label="Previous month"
+          aria-label={t('calendar.prevMonth')}
           disabled={!canGoBack}
           onClick={() => setVisibleMonth((m) => addMonths(m, -1))}
         >
@@ -52,7 +55,7 @@ export default function CalendarPicker({ value, onChange, maxDaysAhead = 31, now
         <button
           type="button"
           className="ccc-cal__nav"
-          aria-label="Next month"
+          aria-label={t('calendar.nextMonth')}
           onClick={() => setVisibleMonth((m) => addMonths(m, 1))}
         >
           <MomentumIcon src={chevronRight} size={12} />
