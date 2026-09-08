@@ -18,6 +18,15 @@ function sortedByName(list) {
   return (list || []).slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 }
 
+// Some tenants return the special "Available" aux code (id '0', see the SDK's
+// own lastStateAuxCodeId convention) as a regular entry in the idle-codes
+// list. Without this, it duplicated the synthetic, translated AVAILABLE_OPTION
+// below with its own untranslated tenant-configured name (e.g. "Dostupný" AND
+// "Available" both in the dropdown).
+function excludeAvailableCode(list) {
+  return (list || []).filter((c) => c.id !== '0');
+}
+
 /*
  * The badge previously coloured itself off agentStatus alone, but AVAILABLE
  * only means "station logged in" — ready and not-ready both landed on the same
@@ -78,7 +87,7 @@ export default function AgentBar() {
           <SearchableSelect
             value={pendingAux}
             onChange={(id) => setPendingAux(id || 'available')}
-            options={[AVAILABLE_OPTION, ...sortedByName(idleCodes)]}
+            options={[AVAILABLE_OPTION, ...sortedByName(excludeAvailableCode(idleCodes))]}
             ariaLabel={t('agentBar.availabilityLabel')}
           />
           <Button
