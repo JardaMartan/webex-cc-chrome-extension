@@ -15,7 +15,30 @@ import { handleIncomingTask } from './screenPop.js';
 
 // Tabs that currently host a mounted widget (content script). Broadcast target
 // for EVT_* messages coming from the offscreen document.
+//
+// PERSISTED in chrome.storage.session, not just kept in memory: an MV3
+// service worker is non-persistent and Chrome evicts/restarts it after ~30s
+// idle, which wipes any plain module-level Set/variable. Without persisting
+// this registry, a restart silently orphans every widget tab from EVT_*
+// broadcasts (state changes, incoming-call screen-pop) with no error and no
+// recovery except a full page reload — exactly the "widget sat idle, then
+// login/wrap-up never updated the UI" reports. chrome.storage.session
+// survives a service-worker restart (cleared only when the browser fully
+// closes), so it's the right lifetime here.
 const widgetTabs = new Set();
+let crmTabId = null; // the one tab every screen-pop navigation reuses
+const WIDGET_REGISTRY_KEY = 'crmCallCompanionWidgetRegistry';
+
+const widgetRegistryReady = chrome.storage.session.get(WIDGET_REGISTRY_KEY).then((res) => {
+  const saved = res[WIDGET_REGISTRY_KEY];
+  if (!saved) return;
+  (saved.tabIds || []).forEach((id) => widgetTabs.add(id));
+  crmTabId = saved.crmTabId ?? null;
+});
+
+function persistWidgetRegistry() {
+  chrome.storage.session.set({ [WIDGET_REGISTRY_KEY]: { tabIds: [...widgetTabs], crmTabId } });
+}
 
 // Offscreen EVT_* messages arrive as independent onMessage calls; without
 // this, two handleOffscreenEvent(...) calls fired back-to-back (e.g. a burst
@@ -26,15 +49,10 @@ const widgetTabs = new Set();
 // onto this promise forces strictly in-order processing.
 let offscreenEventQueue = Promise.resolve();
 
-// The one tab every screen-pop navigation reuses, so an incoming call never
-// spawns extra browser tabs. Set from the most recent widget mount and kept
-// in sync if that tab closes; screenPop.js falls back to search/create only
-// when this is unset or stale.
-let crmTabId = null;
-
 chrome.tabs.onRemoved.addListener((tabId) => {
   widgetTabs.delete(tabId);
   if (crmTabId === tabId) crmTabId = null;
+  persistWidgetRegistry();
 });
 
 function sendToOffscreen(type, payload) {
@@ -89,12 +107,23 @@ function initSdkInBackground(accessToken) {
 }
 
 async function handleWidgetOrUiCommand(msg, sender) {
+  await widgetRegistryReady;
   const { type, payload } = msg;
+
+  // Self-heal on EVERY widget-originated message, not just WIDGET_READY: if
+  // the service worker was restarted and the persisted registry somehow
+  // missed this tab, any subsequent command from it re-establishes the
+  // registration rather than waiting for the widget to reload.
+  if (msg.source === SOURCE.WIDGET && sender.tab?.id != null && !widgetTabs.has(sender.tab.id)) {
+    widgetTabs.add(sender.tab.id);
+    persistWidgetRegistry();
+  }
 
   if (type === REG.WIDGET_READY) {
     if (sender.tab?.id != null) {
       widgetTabs.add(sender.tab.id);
       crmTabId = sender.tab.id;
+      persistWidgetRegistry();
     }
     await ensureOffscreenDocument();
     const tokens = await getTokens();
@@ -118,7 +147,10 @@ async function handleWidgetOrUiCommand(msg, sender) {
   }
 
   if (type === REG.WIDGET_CLOSED) {
-    if (sender.tab?.id != null) widgetTabs.delete(sender.tab.id);
+    if (sender.tab?.id != null) {
+      widgetTabs.delete(sender.tab.id);
+      persistWidgetRegistry();
+    }
     return { ok: true };
   }
 
@@ -158,13 +190,17 @@ async function handleWidgetOrUiCommand(msg, sender) {
 }
 
 async function handleOffscreenEvent(msg) {
+  await widgetRegistryReady;
   const { type, payload } = msg;
   await broadcastToWidgets(msg);
   if (type === EVT.INCOMING_TASK) {
     const settings = await getSettings();
     try {
       const result = await handleIncomingTask(payload, settings, crmTabId);
-      if (result?.tabId != null) crmTabId = result.tabId;
+      if (result?.tabId != null) {
+        crmTabId = result.tabId;
+        persistWidgetRegistry();
+      }
     } catch (err) {
       console.error('[crm-call-companion] screen-pop failed', err);
     }
