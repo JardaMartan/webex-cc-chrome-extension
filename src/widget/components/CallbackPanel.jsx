@@ -55,7 +55,7 @@ export default function CallbackPanel() {
   const [existing, setExisting] = useState(null);
   const [checking, setChecking] = useState(false);
   const [form, setForm] = useState({
-    customerName: '',
+    customerName: callbackDraft?.customerName || '',
     callbackNumber: callbackDraft?.callbackNumber || '',
     date: '',
     time: '',

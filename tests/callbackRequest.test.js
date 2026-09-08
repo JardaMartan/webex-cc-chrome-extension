@@ -1,4 +1,4 @@
-import { buildCallbackRequest, earliestStart, MIN_LEAD_MINUTES } from '../src/widget/callback/callbackRequest.js';
+import { buildCallbackRequest, earliestStart, MIN_LEAD_MINUTES, guessCustomerName } from '../src/widget/callback/callbackRequest.js';
 
 const NOW = new Date('2026-09-03T10:00:00');
 const VALID = {
@@ -66,6 +66,36 @@ describe('buildCallbackRequest', () => {
 
   it('caps the customer name at the documented 250 characters', () => {
     expect(() => buildCallbackRequest({ ...VALID, customerName: 'x'.repeat(251) })).toThrow(/250 characters/);
+  });
+});
+
+describe('guessCustomerName', () => {
+  it('prefers a full-name-shaped CAD field', () => {
+    expect(guessCustomerName({ CustomerName: 'Ada Lovelace', FirstName: 'Ada', LastName: 'Lovelace' })).toBe(
+      'Ada Lovelace'
+    );
+  });
+
+  it('matches full-name keys case/separator-insensitively', () => {
+    expect(guessCustomerName({ full_name: 'Grace Hopper' })).toBe('Grace Hopper');
+    expect(guessCustomerName({ ContactName: 'Alan Turing' })).toBe('Alan Turing');
+  });
+
+  it('falls back to combining first + last name', () => {
+    expect(guessCustomerName({ FirstName: 'Katherine', LastName: 'Johnson' })).toBe('Katherine Johnson');
+  });
+
+  it('uses only whichever of first/last name is present', () => {
+    expect(guessCustomerName({ FirstName: 'Margaret' })).toBe('Margaret');
+  });
+
+  it('ignores blank values and unrelated CAD fields', () => {
+    expect(guessCustomerName({ AccountId: '12345', CustomerName: '   ' })).toBe('');
+  });
+
+  it('returns an empty string when there is nothing to go on', () => {
+    expect(guessCustomerName(null)).toBe('');
+    expect(guessCustomerName({})).toBe('');
   });
 });
 

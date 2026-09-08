@@ -82,8 +82,16 @@ const callSlice = createSlice({
     clearError(state) {
       state.error = null;
     },
+    // Accepts either a bare phone number string (phonePopover.js's click-to-
+    // schedule pill) or { callbackNumber, customerName } (mid-call "schedule
+    // a callback" button, pre-filled from CAD — see CallControls.jsx).
     startCallbackDraft(state, action) {
-      state.callbackDraft = { callbackNumber: action.payload || '' };
+      const payload = action.payload;
+      const isObject = payload && typeof payload === 'object';
+      state.callbackDraft = {
+        callbackNumber: (isObject ? payload.callbackNumber : payload) || '',
+        customerName: (isObject && payload.customerName) || '',
+      };
     },
     clearCallbackDraft(state) {
       state.callbackDraft = null;

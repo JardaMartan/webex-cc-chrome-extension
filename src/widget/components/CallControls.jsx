@@ -6,11 +6,13 @@ import micMutedIcon from '@momentum-ui/icons/svg/microphone-muted_16.svg';
 import holdIcon from '@momentum-ui/icons/svg/pause_16.svg';
 import transferIcon from '@momentum-ui/icons/svg/call-forward_16.svg';
 import endCallIcon from '@momentum-ui/icons/svg/cancel_16.svg';
-import { taskAction } from '../store/callSlice.js';
+import calendarAddIcon from '@momentum-ui/icons/svg/calendar-add_16.svg';
+import { taskAction, startCallbackDraft } from '../store/callSlice.js';
 import { AGENT_STATUS, TASK_ACTION } from '../../shared/constants.js';
 import SearchableSelect from '../ui/SearchableSelect.jsx';
 import MomentumIcon from '../ui/MomentumIcon.jsx';
 import TransferPanel from './TransferPanel.jsx';
+import { guessCustomerName } from '../callback/callbackRequest.js';
 import useT from '../i18n/useT.js';
 
 export default function CallControls() {
@@ -146,6 +148,20 @@ export default function CallControls() {
             onClick={() => setShowTransfer(true)}
           >
             <MomentumIcon src={transferIcon} />
+          </Button>
+          <Button
+            circle
+            size={28}
+            color="blue"
+            ariaLabel={t('callback.scheduleTitle')}
+            title={t('callback.scheduleTitle')}
+            onClick={() =>
+              dispatch(
+                startCallbackDraft({ callbackNumber: activeTask.ani || '', customerName: guessCustomerName(activeTask.cad) })
+              )
+            }
+          >
+            <MomentumIcon src={calendarAddIcon} />
           </Button>
           <Button
             circle

@@ -121,3 +121,36 @@ export function buildCallbackRequest({
     ...(assigneeAgent ? { assigneeAgent } : {}),
   };
 }
+
+function normalizeCadKey(key) {
+  return String(key || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// Tenants name their Call-Associated-Data flow variables however they like,
+// so this matches by normalized key (case/separator-insensitive) against the
+// common conventions rather than one fixed name. Full-name-shaped fields win
+// over first/last so "Jane Q. Doe" isn't reduced to "Jane Doe".
+const FULL_NAME_CAD_KEYS = ['customername', 'fullname', 'contactname', 'callername', 'clientname', 'name'];
+const FIRST_NAME_CAD_KEYS = ['firstname', 'fname', 'givenname'];
+const LAST_NAME_CAD_KEYS = ['lastname', 'lname', 'surname', 'familyname'];
+
+/**
+ * Best-effort customer name from a task's flat CAD map (`activeTask.cad` —
+ * see serializeTask() in sdk/webexSdkClient.js), to pre-fill the callback
+ * form when scheduling one mid-call. Returns '' when nothing matches.
+ */
+export function guessCustomerName(cad) {
+  if (!cad || typeof cad !== 'object') return '';
+  const byNormalizedKey = {};
+  for (const [key, value] of Object.entries(cad)) {
+    const normalized = normalizeCadKey(key);
+    const trimmed = value == null ? '' : String(value).trim();
+    if (trimmed && !byNormalizedKey[normalized]) byNormalizedKey[normalized] = trimmed;
+  }
+  const fullName = FULL_NAME_CAD_KEYS.map((k) => byNormalizedKey[k]).find(Boolean);
+  if (fullName) return fullName;
+
+  const firstName = FIRST_NAME_CAD_KEYS.map((k) => byNormalizedKey[k]).find(Boolean);
+  const lastName = LAST_NAME_CAD_KEYS.map((k) => byNormalizedKey[k]).find(Boolean);
+  return [firstName, lastName].filter(Boolean).join(' ');
+}
