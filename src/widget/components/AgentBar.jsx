@@ -18,13 +18,18 @@ function sortedByName(list) {
   return (list || []).slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 }
 
-// Some tenants return the special "Available" aux code (id '0', see the SDK's
-// own lastStateAuxCodeId convention) as a regular entry in the idle-codes
-// list. Without this, it duplicated the synthetic, translated AVAILABLE_OPTION
-// below with its own untranslated tenant-configured name (e.g. "Dostupný" AND
-// "Available" both in the dropdown).
-function excludeAvailableCode(list) {
-  return (list || []).filter((c) => c.id !== '0');
+// The only reserved idle-code id documented anywhere in the SDK (types +
+// webexSdkClient.js's own lastStateAuxCodeId handling): '0' always means
+// "Available", regardless of what name the tenant configured for it. Some
+// tenants return it as a normal, non-system entry in idleCodes with its own
+// (untranslated) name — translate it IN PLACE rather than dropping it, so
+// the tenant's entry is still the one selected/submitted (no separate
+// fabricated id to keep in sync with it), just relabelled to match the rest
+// of the UI's language instead of showing two "Available"-ish rows.
+const AVAILABLE_CODE_ID = '0';
+
+function translateIdleCodes(t, list) {
+  return (list || []).map((c) => (c.id === AVAILABLE_CODE_ID ? { ...c, name: t('status.available') } : c));
 }
 
 /*
@@ -56,21 +61,28 @@ function describeStatus(t, { agentStatus, subStatus, activeTask, idleCodeName })
 
 export default function AgentBar() {
   const t = useT();
-  const AVAILABLE_OPTION = { id: 'available', name: t('status.available') };
   const dispatch = useDispatch();
   const { agentStatus, agent, teams, loginVoiceOptions, idleCodes, subStatus, auxCodeId, activeTask, loading } =
     useSelector((s) => s.call);
   const [teamId, setTeamId] = useState('');
   const [loginOption, setLoginOption] = useState('');
   const [dialNumber, setDialNumber] = useState('');
-  const [pendingAux, setPendingAux] = useState('available');
+  const [pendingAux, setPendingAux] = useState(AVAILABLE_CODE_ID);
 
   const isLoggedIntoStation = [AGENT_STATUS.AVAILABLE, AGENT_STATUS.ON_CALL, AGENT_STATUS.WRAP_UP].includes(agentStatus);
   // loginOption is one of the SDK's literal LoginOption values: 'AGENT_DN' |
   // 'EXTENSION' | 'BROWSER'. Only the first two need a dial-in number.
   const needsDialNumber = useMemo(() => loginOption === 'AGENT_DN' || loginOption === 'EXTENSION', [loginOption]);
 
-  const currentIdleCodeName = (idleCodes || []).find((c) => c.id === auxCodeId)?.name;
+  const translatedIdleCodes = useMemo(() => translateIdleCodes(t, idleCodes), [t, idleCodes]);
+  // Only fabricate a synthetic entry when the tenant genuinely never sent one
+  // for the reserved id — otherwise the real (now translated) entry is used.
+  const hasAvailableCode = translatedIdleCodes.some((c) => c.id === AVAILABLE_CODE_ID);
+  const availabilityOptions = hasAvailableCode
+    ? sortedByName(translatedIdleCodes)
+    : [{ id: AVAILABLE_CODE_ID, name: t('status.available') }, ...sortedByName(translatedIdleCodes)];
+
+  const currentIdleCodeName = translatedIdleCodes.find((c) => c.id === auxCodeId)?.name;
   const status = describeStatus(t, { agentStatus, subStatus, activeTask, idleCodeName: currentIdleCodeName });
 
   return (
@@ -86,8 +98,8 @@ export default function AgentBar() {
         <div className="ccc-agent-bar__availability">
           <SearchableSelect
             value={pendingAux}
-            onChange={(id) => setPendingAux(id || 'available')}
-            options={[AVAILABLE_OPTION, ...sortedByName(excludeAvailableCode(idleCodes))]}
+            onChange={(id) => setPendingAux(id || AVAILABLE_CODE_ID)}
+            options={availabilityOptions}
             ariaLabel={t('agentBar.availabilityLabel')}
           />
           <Button
@@ -96,7 +108,9 @@ export default function AgentBar() {
             onClick={() =>
               dispatch(
                 setAgentState(
-                  pendingAux === 'available' ? { state: 'Available', auxCodeId: '0' } : { state: 'Idle', auxCodeId: pendingAux }
+                  pendingAux === AVAILABLE_CODE_ID
+                    ? { state: 'Available', auxCodeId: AVAILABLE_CODE_ID }
+                    : { state: 'Idle', auxCodeId: pendingAux }
                 )
               )
             }
