@@ -14,32 +14,32 @@ Webex Contact Center SDK** (no Webex CC Desktop host required).
   Webex, station-login, and take calls without ever opening Webex CC Desktop.
 - Lets you configure, in the extension's Options page, **which page** the
   widget/scanner activates on, and a **screen-pop URL template** that opens
-  when a call arrives (with `{ani}`, `{taskId}`, `{queueName}` placeholders).
+  when a call arrives (with `{ani}`, `{taskId}`, `{queueName}` or `{cad.any_desktop_variable}` placeholders).
 - Adds a small "Call" pill that appears when you hover any phone-number-looking
   text on the configured page, to start an outbound call with one click.
 
 ## Architecture
 
 ```
-┌───────────────────────────── CRM tab (any page) ─────────────────────────────┐
-│  content.js  (dynamically registered against your configured URL pattern)    │
-│    - mounts <WidgetApp/> (React+Redux+MomentumUI) in a Shadow DOM            │
-│    - phone/phonePopover.js scans the DOM, injects hover "Call" pills          │
-│    - talks to the background service worker via chrome.runtime messaging     │
-└───────────────────────────────────────┬───────────────────────────────────────┘
+┌───────────────────────────── CRM tab (any page) ───────────────────────────────┐
+│  content.js  (dynamically registered against your configured URL pattern)      │
+│    - mounts <WidgetApp/> (React+Redux+MomentumUI) in a Shadow DOM              │
+│    - phone/phonePopover.js scans the DOM, injects hover "Call" pills           │
+│    - talks to the background service worker via chrome.runtime messaging       │
+└────────────────────────────────────────┬───────────────────────────────────────┘
                                          │ CMD_* / EVT_*
-┌────────────────────────────────────────▼──────────────────────────────────────┐
-│  background.js  (MV3 service worker — router.js, oauthBroker.js, screenPop.js)│
-│    - routes commands to the offscreen document                                │
-│    - owns OAuth (PKCE) login + token storage (chrome.storage.session)         │
-│    - resolves the screen-pop URL template and navigates the CRM tab           │
+┌────────────────────────────────────────▼───────────────────────────────────────┐
+│  background.js  (MV3 service worker — router.js, oauthBroker.js, screenPop.js) │
+│    - routes commands to the offscreen document                                 │
+│    - owns OAuth (PKCE) login + token storage (chrome.storage.session)          │
+│    - resolves the screen-pop URL template and navigates the CRM tab            │
 └────────────────────────────────────────┬───────────────────────────────────────┘
                                          │
-┌────────────────────────────────────────▼──────────────────────────────────────┐
-│  offscreen.js  (hidden, extension-owned document — chrome.offscreen)          │
+┌────────────────────────────────────────▼───────────────────────────────────────┐
+│  offscreen.js  (hidden, extension-owned document — chrome.offscreen)           │
 │    - the ONLY place the Webex Contact Center SDK is loaded (sdk/webexSdkClient)│
-│    - persists across CRM tab navigation/reload (see "Why an offscreen doc")   │
-└─────────────────────────────────────────────────────────────────────────────────┘
+│    - persists across CRM tab navigation/reload (see "Why an offscreen doc")    │
+└────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Why an offscreen document, not the content script itself?
@@ -104,7 +104,7 @@ for `brokerUrl` in Options (step 5) and `ALLOWED_ORIGIN` (step 3).
 
 1. [developer.webex.com/my-apps/new/integration](https://developer.webex.com/my-apps/new/integration)
 2. Redirect URI: `https://olckgckmelfihnkbibckgllpegijjeek.chromiumapp.org/`
-3. Scope: `cjp:user`.
+3. Scope: `cjp:user cjp:config_read spark:webrtc_calling`.
 4. Copy the **Client ID** and **Client Secret**.
 
 ### 3. Put the real secret in Secret Manager (run this yourself — never share
@@ -135,7 +135,7 @@ Open the extension's Options page and set:
 - **Target CRM page**: your CRM's domain, e.g. `crm.example.com`
 - **Screen-pop URL template**: e.g. `https://crm.example.com/customers?phone={ani}`
 - **Client ID**: from step 2
-- **Scopes**: `cjp:user`
+- **Scopes**: `cjp:user cjp:config_read spark:webrtc_calling`
 - **Token broker URL**: the Cloud Run URL from step 1
 
 Open your configured CRM page, click the floating call bubble, **Sign in with
