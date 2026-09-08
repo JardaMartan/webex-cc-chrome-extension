@@ -30,6 +30,7 @@ import { t } from '../../shared/i18n/translate.js';
 const scannedHosts = new WeakSet();
 // Pills already injected, so a state change can re-skin them in place.
 const livePills = [];
+const WIDGET_HOST_ID = 'crm-call-companion-host';
 
 // Mirrors the store so the hover handlers stay synchronous.
 let dialable = false;
@@ -112,12 +113,23 @@ function attachHover(host, pill) {
   pill.addEventListener('mouseleave', hide);
 }
 
+// TreeWalker does not normally enter a shadow root, but make that boundary
+// explicit so widget text is never eligible if the scan root changes later.
+function isWidgetOwnedNode(node) {
+  if (node?.getRootNode?.().host?.id === WIDGET_HOST_ID) return true;
+  for (let element = node?.parentElement; element; element = element.parentElement) {
+    if (element.id === WIDGET_HOST_ID) return true;
+  }
+  return false;
+}
+
 function scanTextNodes(root, store, pillContainer) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const p = node.parentNode;
       if (!p || !p.nodeName) return NodeFilter.FILTER_REJECT;
       if (['SCRIPT', 'STYLE', 'TEXTAREA', 'NOSCRIPT'].includes(p.nodeName)) return NodeFilter.FILTER_REJECT;
+      if (isWidgetOwnedNode(node)) return NodeFilter.FILTER_REJECT;
       if (scannedHosts.has(p)) return NodeFilter.FILTER_REJECT;
       if (!node.nodeValue || !/\d/.test(node.nodeValue)) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
@@ -129,7 +141,7 @@ function scanTextNodes(root, store, pillContainer) {
 
   pending.forEach((node) => {
     const host = node.parentNode;
-    if (!host || scannedHosts.has(host)) return;
+    if (!host || isWidgetOwnedNode(node) || scannedHosts.has(host)) return;
     const phones = extractPhoneNumbers(node.nodeValue);
     if (phones.length === 0) return;
     scannedHosts.add(host);
@@ -140,6 +152,21 @@ function scanTextNodes(root, store, pillContainer) {
       pillContainer.appendChild(pill.group);
       attachHover(host, pill.group);
     });
+  });
+}
+
+// A normal TreeWalker does not cross ShadowRoot boundaries. Modern CRMs often
+// render their visible fields inside several layers of open web components, so
+// discover and scan every reachable open root rather than treating document.body
+// as the whole visible page. Closed roots cannot be inspected by design.
+function scanOpenShadowRoots(root, store, pillContainer, observeRoot) {
+  if (root instanceof Element && root.id === WIDGET_HOST_ID) return;
+  scanTextNodes(root, store, pillContainer);
+  const elements = root.querySelectorAll ? root.querySelectorAll('*') : [];
+  elements.forEach((element) => {
+    if (element.id === WIDGET_HOST_ID || !element.shadowRoot) return;
+    observeRoot(element.shadowRoot);
+    scanOpenShadowRoots(element.shadowRoot, store, pillContainer, observeRoot);
   });
 }
 
@@ -162,25 +189,37 @@ export function startPhonePopoverScanner(store, pillContainer) {
   syncAvailability();
   const unsubscribe = store.subscribe(syncAvailability);
 
+  const observedRoots = new WeakSet();
+  const observers = [];
+  let rescanTimer = null;
   const scan = () => {
     try {
-      scanTextNodes(document.body, store, pillContainer);
+      scanOpenShadowRoots(document.body, store, pillContainer, observeRoot);
     } catch (err) {
       console.warn('[crm-call-companion] phone scan error', err);
     }
   };
-  scan();
-  let rescanTimer = null;
-  const observer = new MutationObserver(() => {
+
+  const queueRescan = () => {
     if (rescanTimer) return;
     rescanTimer = setTimeout(() => {
       rescanTimer = null;
       scan();
     }, 400);
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+  };
+
+  const observeRoot = (root) => {
+    if (observedRoots.has(root)) return;
+    observedRoots.add(root);
+    const observer = new MutationObserver(queueRescan);
+    observer.observe(root, { childList: true, subtree: true, characterData: true });
+    observers.push(observer);
+  };
+
+  observeRoot(document.documentElement);
+  scan();
   return () => {
-    observer.disconnect();
+    observers.forEach((observer) => observer.disconnect());
     unsubscribe();
   };
 }
