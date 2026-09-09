@@ -36,6 +36,7 @@
 .ss-trigger.is-open { border-color: var(--ss-accent); box-shadow: 0 0 0 3px rgba(14, 127, 193, 0.18); }
 .ss-trigger:disabled { opacity: 0.6; cursor: not-allowed; }
 .ss-trigger:focus-visible { outline: none !important; border-color: var(--ss-accent); box-shadow: 0 0 0 3px rgba(14, 127, 193, 0.18); }
+.ss-trigger__icon { display: inline-flex; align-items: center; color: var(--ss-text2); flex-shrink: 0; }
 .ss-trigger__value { flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ss-trigger.is-placeholder .ss-trigger__value { color: var(--ss-text2); }
 .ss-trigger__chevron { display: inline-flex; color: var(--ss-text2); flex-shrink: 0; }

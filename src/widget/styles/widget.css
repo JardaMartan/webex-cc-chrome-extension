@@ -184,6 +184,38 @@
   margin: 0;
 }
 
+.ccc-settings__time-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.ccc-settings__time-range .ccc-timepicker {
+  flex: 1;
+}
+
+.ccc-settings__conflict {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(199, 79, 14, 0.12);
+  color: var(--text);
+  font-size: 11px;
+}
+
+.ccc-settings__conflict svg {
+  flex: none;
+  color: #c74f0e;
+  margin-top: 1px;
+}
+
+.ccc-root[data-dark='true'] .ccc-settings__conflict svg {
+  color: #f26b1d;
+}
+
 .ccc-settings__divider {
   height: 1px;
   background: var(--border);
@@ -592,14 +624,14 @@
 .ccc-cal__day:disabled { opacity: 0.3; cursor: not-allowed; }
 
 .ccc-timepicker {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  position: relative;
+  width: 100%;
 }
 
 .ccc-timepicker__sep {
   color: var(--text2);
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .ccc-callbacks {

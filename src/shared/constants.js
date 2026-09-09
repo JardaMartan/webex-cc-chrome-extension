@@ -134,4 +134,7 @@ export const DEFAULT_SETTINGS = {
   // 'auto' (follow the resolved page/browser language) or a supported
   // locale code from shared/i18n/locales.js.
   language: 'auto',
+  // Working hours start/end in 24-hour format ("HH:mm") for the callback scheduler.
+  workingHoursStart: '08:00',
+  workingHoursEnd: '17:00',
 };

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import warningIcon from '@momentum-ui/icons/svg/warning_16.svg';
 import {
   clearCallbackDraft,
   deleteCallback,
@@ -14,11 +15,14 @@ import {
   windowMinutesBetween,
   MAX_DAYS_AHEAD,
 } from '../callback/callbackRequest.js';
+import { findCallbackConflict } from '../callback/timeOptions.js';
+import { getSettings, onSettingsChanged } from '../../shared/storage.js';
 import Button from '../ui/Button.jsx';
 import Spinner from '../ui/Spinner.jsx';
 import SearchableSelect from '../ui/SearchableSelect.jsx';
 import DatePicker from '../ui/DatePicker.jsx';
 import TimePicker from '../ui/TimePicker.jsx';
+import MomentumIcon from '../ui/MomentumIcon.jsx';
 import useT from '../i18n/useT.js';
 
 const ASSIGN_TO_QUEUE = 'queue';
@@ -54,6 +58,9 @@ export default function CallbackPanel() {
   // The existing callback for this number, if any — a number may hold only one.
   const [existing, setExisting] = useState(null);
   const [checking, setChecking] = useState(false);
+  const [settings, setSettingsState] = useState(null);
+  const [conflict, setConflict] = useState(null);
+  const [checkingConflict, setCheckingConflict] = useState(false);
   const [form, setForm] = useState({
     customerName: callbackDraft?.customerName || '',
     callbackNumber: callbackDraft?.callbackNumber || '',
@@ -111,10 +118,51 @@ export default function CallbackPanel() {
   };
 
   useEffect(() => {
+    getSettings().then(setSettingsState);
+    return onSettingsChanged(setSettingsState);
+  }, []);
+
+  useEffect(() => {
     dispatch(fetchTransferQueues()).then((list) => setQueues(list || []));
     refreshScheduled();
     checkExisting(callbackDraft?.callbackNumber);
   }, [dispatch]);
+
+  // Conflict checking: check the callback scheduling API for conflicts
+  // when scheduled to Me and date/time are selected. In scheduling to Queue,
+  // conflict checking is skipped.
+  useEffect(() => {
+    if (form.assignTo !== ASSIGN_TO_ME || !form.date || !form.time) {
+      setConflict(null);
+      return;
+    }
+
+    let cancelled = false;
+    setCheckingConflict(true);
+
+    dispatch(fetchScheduledCallbacks())
+      .then((list) => {
+        if (cancelled) return;
+        const callbacks = list || [];
+        setScheduled(callbacks);
+        const found = findCallbackConflict(
+          { date: form.date, time: form.time, windowMinutes: form.windowMinutes },
+          callbacks,
+          { excludeId: existing?.id, myAgentId }
+        );
+        setConflict(found);
+      })
+      .catch(() => {
+        if (!cancelled) setConflict(null);
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingConflict(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch, form.assignTo, form.date, form.time, form.windowMinutes, existing?.id, myAgentId]);
 
   // A queue is mandatory even for a personal callback, so one is kept selected
   // behind the scenes while the picker is hidden.
@@ -217,7 +265,14 @@ export default function CallbackPanel() {
       />
 
       <label className="ccc-settings__label">{t('callback.startTimeLabel')}</label>
-      <TimePicker date={form.date} value={form.time} onChange={(time) => update({ time })} />
+      <TimePicker
+        date={form.date}
+        value={form.time}
+        onChange={(time) => update({ time })}
+        workingHoursStart={settings?.workingHoursStart || '08:00'}
+        workingHoursEnd={settings?.workingHoursEnd || '17:00'}
+        ariaLabel={t('callback.startTimeLabel')}
+      />
 
       <label className="ccc-settings__label">{t('callback.windowLabel')}</label>
       <SearchableSelect
@@ -248,6 +303,23 @@ export default function CallbackPanel() {
       </div>
       {form.assignTo === ASSIGN_TO_OTHER && (
         <p className="ccc-muted ccc-settings__hint">{t('callback.assignedToOther')}</p>
+      )}
+
+      {form.assignTo === ASSIGN_TO_ME && checkingConflict && (
+        <p className="ccc-muted ccc-settings__hint">{t('callback.checkingExisting')}</p>
+      )}
+      {form.assignTo === ASSIGN_TO_ME && conflict && (
+        <div className="ccc-settings__conflict" role="alert">
+          <MomentumIcon src={warningIcon} size={14} />
+          <span>
+            {conflict.customerName || conflict.callbackNumber
+              ? t('callback.conflictWarningWithName', {
+                  name: conflict.customerName || conflict.callbackNumber,
+                  time: formatWhen(conflict),
+                })
+              : t('callback.conflictWarning', { time: formatWhen(conflict) })}
+          </span>
+        </div>
       )}
 
       {form.assignTo === ASSIGN_TO_QUEUE ? (

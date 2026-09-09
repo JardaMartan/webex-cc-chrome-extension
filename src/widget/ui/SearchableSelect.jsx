@@ -35,6 +35,7 @@ export default function SearchableSelect({
   disabled = false,
   ariaLabel,
   emptyText = '',
+  icon = null,
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -145,6 +146,7 @@ export default function SearchableSelect({
         aria-expanded={open}
         aria-label={ariaLabel}
       >
+        {icon && <span className="ss-trigger__icon">{icon}</span>}
         <span className="ss-trigger__value" title={triggerText}>
           {triggerText}
         </span>

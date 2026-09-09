@@ -1,72 +1,83 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import clockIcon from '@momentum-ui/icons/svg/recents_16.svg';
 import SearchableSelect from './SearchableSelect.jsx';
-import { timeOptions } from '../callback/timeOptions.js';
+import MomentumIcon from './MomentumIcon.jsx';
+import { timeOptions, generateTimeSlots, MINUTE_INTERVAL } from '../callback/timeOptions.js';
 import useT from '../i18n/useT.js';
 
 /*
- * widget/ui/TimePicker.jsx — hour/minute selector for the callback form.
+ * widget/ui/TimePicker.jsx — 24-hour time selector with 15-minute intervals
+ * for the callback form and widget settings, styled after MomentumUI TimePicker
+ * with Momentum token pills and the standard Momentum clock icon.
  *
- * Built from the widget's canonical SearchableSelect (Momentum-token pill
- * dropdowns) rather than @momentum-ui/react's TimePicker: that package was
- * removed from this bundle because its components re-enter their own barrel
- * and drag moment.js in with them.
+ * In callback mode (when `date` and/or `workingHoursStart`/`workingHoursEnd` are
+ * provided):
+ * - Constrains selectable times to the agent's configured working hours.
+ * - Enforces the 30-minute API lead time on the current date.
  *
- * Hour and minute are held HERE rather than derived from `value`: the parent
- * only has a complete "HH:mm", so deriving from it discarded a freshly picked
- * hour (there was no minute yet, so value stayed empty and the hour reset).
- *
- * Options are filtered so a time before the API's 30-minute lead time cannot
- * be picked at all on the earliest selectable day.
+ * In general mode (e.g. Settings):
+ * - Provides full 24-hour 15-minute interval options (00:00 to 23:45) or
+ *   custom minTime/maxTime.
  */
-export default function TimePicker({ date, value, onChange, now = new Date() }) {
+export default function TimePicker({
+  value,
+  onChange,
+  date,
+  now = new Date(),
+  workingHoursStart,
+  workingHoursEnd,
+  minTime = '00:00',
+  maxTime = '23:45',
+  interval = MINUTE_INTERVAL,
+  options: customOptions,
+  placeholder,
+  ariaLabel,
+  disabled = false,
+  emptyText,
+}) {
   const t = useT();
-  const { hours, minutesFor } = useMemo(() => timeOptions(date, now), [date, now]);
-  const [hour, setHour] = useState(() => (value ? value.split(':')[0] : ''));
-  const [minute, setMinute] = useState(() => (value ? value.split(':')[1] : ''));
 
-  const apply = (nextHour, nextMinute) => {
-    setHour(nextHour);
-    setMinute(nextMinute);
-    onChange(nextHour && nextMinute ? `${nextHour}:${nextMinute}` : '');
-  };
+  const options = useMemo(() => {
+    if (customOptions) {
+      return customOptions.map((o) => (typeof o === 'string' ? { id: o, name: o } : o));
+    }
+    if (date !== undefined || workingHoursStart !== undefined || workingHoursEnd !== undefined) {
+      const { options: opts } = timeOptions(date, now, {
+        start: workingHoursStart || '08:00',
+        end: workingHoursEnd || '17:00',
+        interval,
+      });
+      return opts;
+    }
+    const slots = generateTimeSlots({
+      start: minTime,
+      end: maxTime,
+      interval,
+    });
+    return slots.map((s) => ({ id: s, name: s }));
+  }, [customOptions, date, now, workingHoursStart, workingHoursEnd, minTime, maxTime, interval]);
 
-  // Changing the day can invalidate the current pick (e.g. moving from
-  // tomorrow back to today drops the early hours), so drop only what no longer
-  // fits rather than submitting something the API would reject.
+  // When options change (e.g. moving between dates or changing working hours),
+  // if the currently selected value is no longer valid, clear it.
   useEffect(() => {
-    if (!hour) return;
-    if (!hours.includes(hour)) apply('', '');
-    else if (minute && !minutesFor(hour).includes(minute)) apply(hour, '');
-  }, [date]);
-
-  // `value` can change out from under this component (e.g. an existing
-  // callback loads asynchronously after mount), so re-sync local hour/minute
-  // whenever it no longer matches what they'd combine to — but only then, so
-  // an in-progress pick (hour set, minute not yet) isn't clobbered.
-  useEffect(() => {
-    const current = hour && minute ? `${hour}:${minute}` : '';
-    if (value === current) return;
-    setHour(value ? value.split(':')[0] : '');
-    setMinute(value ? value.split(':')[1] : '');
-  }, [value]);
+    if (!value) return;
+    const ids = options.map((o) => o.id);
+    if (ids.length > 0 && !ids.includes(value)) {
+      onChange('');
+    }
+  }, [options, value, onChange]);
 
   return (
     <div className="ccc-timepicker">
       <SearchableSelect
-        value={hour}
-        onChange={(h) => apply(h || '', h && minutesFor(h).includes(minute) ? minute : '')}
-        options={hours.map((h) => ({ id: h, name: h }))}
-        placeholder={t('time.hourPlaceholder')}
-        ariaLabel={t('time.hourLabel')}
-      />
-      <span className="ccc-timepicker__sep">:</span>
-      <SearchableSelect
-        value={minute}
-        onChange={(m) => apply(hour, m || '')}
-        options={minutesFor(hour || hours[0]).map((m) => ({ id: m, name: m }))}
-        placeholder={t('time.minutePlaceholder')}
-        ariaLabel={t('time.minuteLabel')}
-        disabled={!hour}
+        value={value || ''}
+        onChange={(v) => onChange(v || '')}
+        options={options}
+        placeholder={placeholder || t('time.selectTime')}
+        ariaLabel={ariaLabel || t('time.selectTime')}
+        disabled={disabled}
+        emptyText={emptyText || t('time.noTimesAvailable')}
+        icon={<MomentumIcon src={clockIcon} size={14} />}
       />
     </div>
   );

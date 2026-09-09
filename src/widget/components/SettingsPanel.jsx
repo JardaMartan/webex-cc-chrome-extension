@@ -7,6 +7,7 @@ import { getSettings, setSettings } from '../../shared/storage.js';
 import { AGENT_STATUS, COLOR_MODE } from '../../shared/constants.js';
 import { SUPPORTED_LOCALES, NATIVE_NAMES, AUTO_LOCALE } from '../../shared/i18n/locales.js';
 import SearchableSelect from '../ui/SearchableSelect.jsx';
+import TimePicker from '../ui/TimePicker.jsx';
 import useT from '../i18n/useT.js';
 
 const SYSTEM_DEFAULT = '__default__';
@@ -143,6 +144,21 @@ export default function SettingsPanel({ onClose }) {
         options={languageOptions}
         ariaLabel={t('settingsPanel.languageLabel')}
       />
+
+      <label className="ccc-settings__label">{t('settingsPanel.workingHoursLabel')}</label>
+      <div className="ccc-settings__time-range">
+        <TimePicker
+          value={settings?.workingHoursStart || '08:00'}
+          onChange={(val) => val && applySetting({ workingHoursStart: val })}
+          ariaLabel={t('settingsPanel.workingHoursStart')}
+        />
+        <span className="ccc-timepicker__sep">–</span>
+        <TimePicker
+          value={settings?.workingHoursEnd || '17:00'}
+          onChange={(val) => val && applySetting({ workingHoursEnd: val })}
+          ariaLabel={t('settingsPanel.workingHoursEnd')}
+        />
+      </div>
 
       <div className="ccc-settings__divider" />
 
